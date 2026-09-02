@@ -92,14 +92,16 @@ const input = page.locator('input[placeholder*="产品名称"]').first();
 await input.click({ force: true });
 await input.fill(OPT.keyword);
 
-// 应用筛选（通过 UI 设置筛选器）
+// 应用筛选（通过 UI 设置筛选器，模态框方式）
 if (OPT.buyCountry) {
   console.log('→ 设置采购地区:', OPT.buyCountry);
-  await setRegionFilter(page, 0, OPT.buyCountry);
+  const ok = await setRegionFilter(page, '采购地区', OPT.buyCountry);
+  console.log(ok ? '  ✓ 采购地区已选' : '  ⚠ 采购地区选择失败');
 }
 if (OPT.supplyCountry) {
   console.log('→ 设置供应地区:', OPT.supplyCountry);
-  await setRegionFilter(page, 1, OPT.supplyCountry);
+  const ok = await setRegionFilter(page, '供应地区', OPT.supplyCountry);
+  console.log(ok ? '  ✓ 供应地区已选' : '  ⚠ 供应地区选择失败');
 }
 if (OPT.hscode) {
   console.log('→ 设置HSCode:', OPT.hscode);
@@ -226,32 +228,61 @@ console.log(`   公司线索: ${LEADS_CSV}`);
 if (OPT.withContacts) console.log(`   联系人: ${CONTACTS_CSV}`);
 process.exit(0);
 
-// === 筛选器操作辅助 ===
-async function setRegionFilter(page, index, country) {
-  // 打开第 index 个 countrySelectModal 下拉，搜索并选择国家
-  const sel = page.locator('[class*=searchfilter] [class*=countrySelectModal], .searchfilter-module--container [class*=countrySelectModal]').nth(index);
-  await sel.click({ force: true });
-  await page.waitForTimeout(1200);
-  // 输入国家名搜索
-  const searchInput = page.locator('.ant-select-dropdown:not(.ant-select-dropdown-hidden) input[type=search], [class*=dropdown] input').first();
-  if (await searchInput.count()) {
-    await searchInput.fill(country);
-    await page.waitForTimeout(1200);
-  }
-  // 点击匹配选项
+// === 筛选器操作辅助（国家选择模态框 OriginModal，已验证）===
+async function setRegionFilter(page, labelText, country) {
+  // 1. 按 label 文本定位到对应 form-item，点开其中的地区选择器（mousedown）
+  await page.evaluate((label) => {
+    // 找 label 文本所在的 form-item，再取其 control 内的 select 触发元素
+    const labels = [...document.querySelectorAll('.ant-form-item, [class*=form-item]')];
+    let target = null;
+    for (const fi of labels) {
+      const lt = (fi.querySelector('.ant-form-item-label, [class*=label]')?.innerText || '').trim();
+      if (lt.replace(/[:：\s]/g, '') === label.replace(/[:：\s]/g, '')) { target = fi; break; }
+    }
+    if (!target) {
+      // 兜底：placeholder 含 label 的选择器
+      target = [...document.querySelectorAll('[class*=countrySelectModal]')].find((e) => (e.querySelector('[class*=placeholder]')?.innerText || '').includes(label));
+    }
+    if (target) {
+      const sel = target.querySelector('.ant-select-selector') || target.querySelector('.ant-select') || target;
+      sel.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    }
+  }, labelText);
+  await page.waitForTimeout(2000);
+
+  // 2. 搜索框输入国家名（React 可控 set value）
   await page.evaluate((c) => {
-    const opt = [...document.querySelectorAll('.ant-select-item-option, [class*=option], [class*=item], li, label, .ant-checkbox-wrapper')]
-      .find((e) => (e.innerText || '').trim().includes(c) && e.offsetParent);
-    if (opt) opt.click();
+    const modal = [...document.querySelectorAll('.ant-modal-root')].find((m) => m.getBoundingClientRect().width > 0 && m.querySelector('input[placeholder*=搜索国家]'));
+    const inp = modal?.querySelector('input[placeholder*=搜索国家]');
+    if (inp) {
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+      setter.call(inp, c);
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    }
   }, country);
-  await page.waitForTimeout(600);
-  // 关闭下拉（点确认或外部）
+  await page.waitForTimeout(1500);
+
+  // 3. 点击国家名（它本身是 checkbox 行）
+  const clicked = await page.evaluate((c) => {
+    const modal = [...document.querySelectorAll('.ant-modal-root')].find((m) => m.getBoundingClientRect().width > 0);
+    if (!modal) return false;
+    const item = [...modal.querySelectorAll('[class*=countrySelectModal-module--name]')].find((e) => (e.innerText || '').trim() === c);
+    if (!item) return false;
+    const row = item.closest('[class*=item], [class*=Item], li, div');
+    const cb = row?.querySelector('input[type=checkbox]');
+    if (cb) cb.click(); else item.click();
+    return true;
+  }, country);
+  await page.waitForTimeout(500);
+
+  // 4. 点确认
   await page.evaluate(() => {
-    const confirm = [...document.querySelectorAll('button, span')].find((e) => /^(确定|确认|OK)$/i.test((e.innerText || '').trim()) && e.offsetParent);
-    if (confirm) confirm.click();
+    const modal = [...document.querySelectorAll('.ant-modal-root')].find((m) => m.getBoundingClientRect().width > 0);
+    const ok = [...(modal?.querySelectorAll('button') || [])].find((b) => /确\s*认|确\s*定/.test((b.innerText || '').trim()));
+    if (ok) ok.click();
   });
-  await page.keyboard.press('Escape').catch(() => {});
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(1000);
+  return clicked;
 }
 
 async function setInputFilter(page, labelRe, value) {
@@ -261,7 +292,12 @@ async function setInputFilter(page, labelRe, value) {
     if (label) {
       const formItem = label.closest('.ant-form-item, [class*=form-item], [class*=filter]');
       const inp = formItem?.querySelector('input');
-      if (inp) { inp.value = val; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); }
+      if (inp) {
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(inp, val);
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        inp.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     }
   }, { labelReSrc: labelRe.source, val: value });
 }

@@ -74,7 +74,8 @@ export function parseContact(contact, company) {
   const hasEmail = emails.length > 0;
   return {
     company_name: company.company_name || '',
-    country: company.country || contact.companyCountry || '',
+    // 国家以「公司」为准；联系人自带的 companyCountry 可能是联系人国籍，仅作兜底
+    country: company.country || '',
     domain: company.domain || '',
     contact_name: contact.name || '',
     contact_title: contact.jobTitle || '',
