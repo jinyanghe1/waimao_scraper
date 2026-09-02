@@ -1,0 +1,348 @@
+{
+  "url": "https://waimao.office.163.com/customs/api/biz/customs/data/v3/detail/buyers/base?sign=1BC10EFBB118E4F2EF33604B99BF0924&timestamp=1788329262914&_host=waimao.office.163.com&_deviceId=12b1a88c423d9f56982894fac40567be&_device=chrome&_systemVersion=10.15.7&_system=web&_manufacturer=chrome&_deviceName=chrome%20152.0.0.0&_appName=sirius-web-waimao&_version=1.369.7",
+  "method": "POST",
+  "postData": "{\"companyName\":\"Global Link Logistics\",\"country\":\"United States\",\"groupByCountry\":true,\"usdRecentYear\":\"\",\"recordCountRecentYear\":\"\",\"visited\":false,\"mergedCompanyNames\":[],\"selectedCompanyListV2\":[],\"companyList\":[{\"companyName\":\"Global Link Logistics\",\"country\":\"United States\"}],\"beginDate\":\"2007-07-21\",\"endDate\":\"2026-08-28\",\"sourceType\":\"customs\"}",
+  "body": {
+    "data": {
+      "companyName": "Global Link Logistics",
+      "showCompanyName": "Global Link Logistics Llc",
+      "originCompanyName": "Global Link Logistics",
+      "mergedCompanyNames": [
+        "GLOBAL LINK LOGISTIC",
+        "Glober Link Llc",
+        "Global Link Logistic",
+        "GLOBAL LINK LOGISTICS LLC",
+        "Global Links",
+        "Global Link Imp. Nc",
+        "Global Links In",
+        "GLOBAL LINK LOGISTICS LLC.",
+        "Global Link Logistics",
+        "Globa Link Logistics Inc.",
+        "Global Link Llc.",
+        "Globl Links Inc.",
+        "Global Link",
+        "Global Link Co., Ltd.",
+        "Global Link Logistics Llc",
+        "GLOBAL LINK LOGISTICS",
+        "Global Links Ny Inc.",
+        "Giobal L Nks Inc.",
+        "Lobal Link Imp. Inc.",
+        "Gobeal Link Logistics",
+        "GLOBAL LINK LOGISTIC LLC",
+        "Golbal Link Logistics Inc.",
+        "GLOBAL LINK",
+        "GLOBAL LINK LOGISTIC, LLC",
+        "Global Link Logistics Llc",
+        "GLOBAL LINK LOGISTICS,LLC.",
+        "Global Link Imp Inc",
+        "Global Link Jc Inc.",
+        "Global Links Inc",
+        "Global Link Inc.",
+        "Global Link Logistics Inc. Attn",
+        "Global Link Logistics Inc. 1990",
+        "GLOBAL LINKS INC",
+        "Global Link Logistics Inc. David F"
+      ],
+      "mergedCompanyListV2": [
+        {
+          "nameAndCountry": "GLOBAL LINK LOGISTIC-COMBINE-United States",
+          "companyName": "GLOBAL LINK LOGISTIC",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Glober Link Llc-COMBINE-United States",
+          "companyName": "Glober Link Llc",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Logistic-COMBINE-United States",
+          "companyName": "Global Link Logistic",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "GLOBAL LINK LOGISTICS LLC-COMBINE-United States",
+          "companyName": "GLOBAL LINK LOGISTICS LLC",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Links-COMBINE-United States",
+          "companyName": "Global Links",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Imp. Nc-COMBINE-United States",
+          "companyName": "Global Link Imp. Nc",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Links In-COMBINE-United States",
+          "companyName": "Global Links In",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "GLOBAL LINK LOGISTICS LLC.-COMBINE-United States",
+          "companyName": "GLOBAL LINK LOGISTICS LLC.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Logistics-COMBINE-United States",
+          "companyName": "Global Link Logistics",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Globa Link Logistics Inc.-COMBINE-United States",
+          "companyName": "Globa Link Logistics Inc.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Llc.-COMBINE-United States",
+          "companyName": "Global Link Llc.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Globl Links Inc.-COMBINE-United States",
+          "companyName": "Globl Links Inc.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link-COMBINE-United States",
+          "companyName": "Global Link",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Co., Ltd.-COMBINE-United States",
+          "companyName": "Global Link Co., Ltd.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Logistics Llc-COMBINE-United States",
+          "companyName": "Global Link Logistics Llc",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "GLOBAL LINK LOGISTICS-COMBINE-United States",
+          "companyName": "GLOBAL LINK LOGISTICS",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Links Ny Inc.-COMBINE-United States",
+          "companyName": "Global Links Ny Inc.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Giobal L Nks Inc.-COMBINE-United States",
+          "companyName": "Giobal L Nks Inc.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Lobal Link Imp. Inc.-COMBINE-United States",
+          "companyName": "Lobal Link Imp. Inc.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Gobeal Link Logistics-COMBINE-United States",
+          "companyName": "Gobeal Link Logistics",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "GLOBAL LINK LOGISTIC LLC-COMBINE-United States",
+          "companyName": "GLOBAL LINK LOGISTIC LLC",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Golbal Link Logistics Inc.-COMBINE-United States",
+          "companyName": "Golbal Link Logistics Inc.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "GLOBAL LINK-COMBINE-United States",
+          "companyName": "GLOBAL LINK",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "GLOBAL LINK LOGISTIC, LLC-COMBINE-United States",
+          "companyName": "GLOBAL LINK LOGISTIC, LLC",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Logistics Llc-COMBINE-United States of America",
+          "companyName": "Global Link Logistics Llc",
+          "showCompanyName": null,
+          "country": "United States of America",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "GLOBAL LINK LOGISTICS,LLC.-COMBINE-United States",
+          "companyName": "GLOBAL LINK LOGISTICS,LLC.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Imp Inc-COMBINE-United States",
+          "companyName": "Global Link Imp Inc",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Jc Inc.-COMBINE-United States",
+          "companyName": "Global Link Jc Inc.",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Links Inc-COMBINE-United States",
+          "companyName": "Global Links Inc",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Inc.-COMBINE-Singapore",
+          "companyName": "Global Link Inc.",
+          "showCompanyName": null,
+          "country": "Singapore",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Logistics Inc. Attn-COMBINE-United States",
+          "companyName": "Global Link Logistics Inc. Attn",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Logistics Inc. 1990-COMBINE-United States",
+          "companyName": "Global Link Logistics Inc. 1990",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "GLOBAL LINKS INC-COMBINE-United States",
+          "companyName": "GLOBAL LINKS INC",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        },
+        {
+          "nameAndCountry": "Global Link Logistics Inc. David F-COMBINE-United States",
+          "companyName": "Global Link Logistics Inc. David F",
+          "showCompanyName": null,
+          "country": "United States",
+          "recordType": null
+        }
+      ],
+      "selectedCompanyNames": [],
+      "selectedCompanyListV2": [],
+      "country": "United States",
+      "standardCountry": "United States",
+      "position": "未公开",
+      "address": "未公开",
+      "ciqRecord": 3473,
+      "maxSupplerName": "Rs Logistics",
+      "maxSupplerShowName": "Rs Logistics Ltd.",
+      "maxSupplierCountry": "China",
+      "totalImportOfUsd": "248,906,115.15",
+      "importCount": 3473,
+      "lastImportTime": "2026-08-28",
+      "postalCode": "未公开",
+      "status": null,
+      "clueStatus": null,
+      "orgClueStatus": null,
+      "customerStatus": null,
+      "orgCustomerStatus": null,
+      "referId": null,
+      "customerLabelType": null,
+      "contactStatus": "",
+      "hasContact": true,
+      "excavatedCompanyInfo": {
+        "id": "globallinklogistics.com",
+        "name": "Global Link Logistics",
+        "country": "United States",
+        "shortDesc": "",
+        "overviewDescription": "Globallink built a legacy of excellence in logistics, providing businesses with tailored solutions that streamline their supply chains.;Globallink Fulfillment is a company that fulfills e-commerce orders and Amazon FBA & FBM solutions for direct-to-consumer brands.;ABOUT US · CONTACT US. Select Page. HOME; SERVICES. Amazon FBA & FBM · E-commerce Fulfillment · White gloves delivery service · Final Mile Services · Industrial ;To pay all invoices within 7 days after an invoice is sent. Each delayed month payment is charged a 3% interest rate. If the payment is not received within 60 ;We offer sophisticated 3PL and Contract Logistics solutions that are efficient, scalable, designed to create strategic advantage across your supply chain.;We offer a comprehensive suite of solutions designed to simplify the complexities of international logistics, ensuring your cargo moves seamlessly from origin ;Our experienced brokers handle all aspects of customs clearance, from documentation and classification to duty calculation and compliance.;If you have an account on this site, or have left comments, you can request to receive an exported file of the personal data we hold about you, including any ;We provide comprehensive eCommerce logistics solutions, from pickup at your chosen manufacturers and international shipping to your designated markets.;Leveraging state of the art logistics technology, we offer real-time tracking, predictive analytics, and optimized routing to ensure every delivery is punctual, ;Globallink Fulfillment is a company that fulfills e-commerce orders and Amazon FBA & FBM solutions for direct-to-consumer brands.;We offer a comprehensive suite of solutions designed to simplify the complexities of international logistics, ensuring your cargo moves seamlessly from origin ;We offer sophisticated 3PL and Contract Logistics solutions that are efficient, scalable, designed to create strategic advantage across your supply chain.;Globallink built a legacy of excellence in logistics, providing businesses with tailored solutions that streamline their supply chains.;We provide comprehensive eCommerce logistics solutions, from pickup at your chosen manufacturers and international shipping to your designated markets.;Our experienced brokers handle all aspects of customs clearance, from documentation and classification to duty calculation and compliance.;Globallink offers industry-leading Amazon FBA (Fulfillment by Amazon) and FBM (Fulfillment by Merchant) services, streamlining the logistics process for Amazon ;White Glove Delivery is a premium service that goes beyond standard shipping. It includes specialty handling, expert placement, and if needed, the removal of ",
+        "location": "1312 17TH ST STE 623 DENVER CO 802 02",
+        "industries": "",
+        "phone": "",
+        "contactCount": 129,
+        "domain": "http://globallinklogistics.com",
+        "alias": "",
+        "foundedDate": "",
+        "operatingStatus": "",
+        "companyType": "",
+        "staff": "",
+        "facebook": "https://facebook.com/gtlconnect",
+        "instagram": "",
+        "linkedin": "https://linkedin.com/company/global-link-logistics",
+        "twitter": "https://www.twitter.com/globaltellink",
+        "youtube": "",
+        "webapp": "",
+        "recProductList": [],
+        "highLight": {
+          "type": "",
+          "value": ""
+        }
+      },
+      "canExcavate": true,
+      "canExactlyExcavate": true,
+      "hasExcavated": true,
+      "collectId": 0,
+      "companyNameId": "-3238476461985350132",
+      "countryId": "-3614004580148585380"
+    },
+    "success": true,
+    "message": "success",
+    "code": 200
+  }
+}
