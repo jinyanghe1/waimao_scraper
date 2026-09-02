@@ -1,0 +1,6 @@
+node_modules/
+data/
+.profile/
+fixtures/raw_*
+*.log
+.DS_Store

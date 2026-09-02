@@ -1,0 +1,16 @@
+{
+  "name": "wm-scraper",
+  "version": "0.1.0",
+  "description": "网易外贸通客户线索采集器（内部提效工具，合规限速）",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "probe": "node scripts/probe.js",
+    "login": "node scripts/login.js",
+    "scrape": "node src/index.js",
+    "test": "node --test tests/"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}
