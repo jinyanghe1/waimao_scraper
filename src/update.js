@@ -63,3 +63,4 @@ if (pull === null) {
 sh('npm install --no-audit --no-fund --silent');
 console.log(JSON.stringify({ ok: true, version: remoteHash.slice(0, 7), msg: '已更新到最新版本' }));
 process.exit(0);
+// version bump test
