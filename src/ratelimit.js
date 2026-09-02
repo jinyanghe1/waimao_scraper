@@ -1,4 +1,4 @@
-// 限速器：拟人节奏 + 失败退避 + 日上限熔断
+// 限速器：拟人节奏 + 失败退避 + 日上限熔断 + 风控检测
 export class RateLimiter {
   constructor({ minMs = 2000, maxMs = 5000, dailyPageCap = 10, dailyItemCap = 200, now = () => Date.now() } = {}) {
     this.minMs = minMs;
@@ -10,6 +10,7 @@ export class RateLimiter {
     this.itemsToday = 0;
     this.consecutiveFailures = 0;
     this.tripped = false; // 熔断标志
+    this.tripReason = '';
   }
 
   // 随机拟人延时（均匀分布 + 简单抖动）
@@ -25,8 +26,8 @@ export class RateLimiter {
   // 失败退避：返回本次应等待的毫秒数；连续失败 >=3 触发熔断
   recordFailure() {
     this.consecutiveFailures++;
-    if (this.consecutiveFailures >= 3) this.tripped = true;
-    return Math.min(2000 * 2 ** (this.consecutiveFailures - 1), 30000); // 2s/4s/8s...封顶30s
+    if (this.consecutiveFailures >= 3) this.tripCircuit('连续失败3次');
+    return Math.min(2000 * 2 ** (this.consecutiveFailures - 1), 30000);
   }
   recordSuccess() { this.consecutiveFailures = 0; }
 
@@ -34,6 +35,20 @@ export class RateLimiter {
     return !this.tripped && this.pagesToday < this.dailyPageCap && this.itemsToday < this.dailyItemCap;
   }
 
-  // 触发风控（滑块/429）→ 立即熔断
-  tripCircuit() { this.tripped = true; }
+  // 触发风控（滑块/429/限流提示）→ 立即熔断
+  tripCircuit(reason = '') { this.tripped = true; this.tripReason = reason; }
+}
+
+// 风控检测：页面是否出现限流/验证码/滑块
+export async function detectRiskControl(page) {
+  try {
+    return await page.evaluate(() => {
+      const t = document.body?.innerText || '';
+      const url = location.href;
+      if (/\/login/.test(url) || /密码登录|扫码登录|立即登录/.test(t.slice(0, 300))) return '登录态失效';
+      if (/操作频繁|稍后再试|访问过于频繁|请求过于频繁|too many/i.test(t)) return '触发限流';
+      if (/滑块|拖动滑块|安全验证|人机验证|captcha/i.test(t)) return '出现验证码/滑块';
+      return null;
+    });
+  } catch { return null; }
 }

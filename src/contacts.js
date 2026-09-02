@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseContactPage } from './parser.js';
 import { escapeCsv } from './csv.js';
-import { RateLimiter } from './ratelimit.js';
+import { RateLimiter, detectRiskControl } from './ratelimit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -21,7 +21,8 @@ const RUN_TAG = new Date().toISOString().slice(0, 10).replace(/-/g, '');
 const OUT_PATH = path.join(ROOT, 'data', `contacts_${KEYWORD}_${RUN_TAG}.csv`);
 console.log(`[联系人] 关键词=${KEYWORD} 公司数=${MAX_COMPANIES} 每公司topX=${TOP_X}`);
 
-const rl = new RateLimiter({ minMs: 4000, maxMs: 8000, dailyItemCap: 100 });
+// 联系人采集放慢节奏（每家点详情+Tab，更易触发风控）：8-15s/家
+const rl = new RateLimiter({ minMs: 8000, maxMs: 15000, dailyItemCap: 60 });
 const browser = await chromium.connectOverCDP('http://127.0.0.1:9222');
 const ctx = browser.contexts()[0];
 const page = ctx.pages().find((p) => p.url().includes('waimao.office.163.com'));
@@ -69,19 +70,18 @@ await input.fill(KEYWORD);
 await page.locator('button:has-text("搜索")').first().click({ force: true });
 await page.waitForTimeout(6000);
 
-// 从 leads CSV 读全量公司列表（若有），否则从页面读
+// 从 leads CSV 读全量公司列表（排除合并版/联系人版，只取纯 leads_关键词_日期.csv）
 let allCompanyNames = [];
-const leadsCsv = OUT_PATH.replace(/contacts_/, 'leads_').replace(/_contacts/, '');
-const leadsAlt = path.join(ROOT, 'data', `leads_${KEYWORD}_${RUN_TAG}.csv`);
-// 找最新的 leads 文件
 let leadsFile = null;
-const leadsFiles = fs.readdirSync(path.join(ROOT, 'data')).filter((f) => /^leads_.*\.csv$/.test(f) && f.includes(KEYWORD)).sort();
+const leadsFiles = fs.readdirSync(path.join(ROOT, 'data'))
+  .filter((f) => /^leads_[^_]+_\d{8}\.csv$/.test(f) && f.includes(KEYWORD) && !f.includes('with_contacts')).sort();
 if (leadsFiles.length) leadsFile = path.join(ROOT, 'data', leadsFiles[leadsFiles.length - 1]);
 if (leadsFile && fs.existsSync(leadsFile)) {
-  const lines = fs.readFileSync(leadsFile, 'utf-8').split('\n').slice(1);
-  const hdr = fs.readFileSync(leadsFile, 'utf-8').split('\n')[0].replace(/^﻿/, '').split(',');
+  const content = fs.readFileSync(leadsFile, 'utf-8');
+  const lines = content.split('\n').slice(1);
+  const hdr = content.split('\n')[0].replace(/^﻿/, '').split(',');
   const nameIdx = hdr.indexOf('公司名');
-  allCompanyNames = lines.map((l) => l.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)[nameIdx]?.replace(/^"|"$/g, '').trim()).filter(Boolean);
+  allCompanyNames = [...new Set(lines.map((l) => l.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)[nameIdx]?.replace(/^"|"$/g, '').trim()).filter(Boolean))];
   console.log(`→ 从 ${path.basename(leadsFile)} 读到 ${allCompanyNames.length} 家公司`);
 } else {
   // 页面当前可见
@@ -105,7 +105,7 @@ const targetSet = new Set(targets);
 let currentPage = 1;
 const maxPageScan = Math.ceil(allCompanyNames.length / 20) + 2;
 while (doneCompanies < targets.length && rl.canContinue() && currentPage <= maxPageScan) {
-  // 当前页可见的公司名
+  // 当前页可见的公司名（可能被截断，用前缀双向匹配）
   const visible = await page.evaluate(() => {
     const out = [];
     document.querySelectorAll('[class*=companyNameText]').forEach((el) => {
@@ -114,9 +114,22 @@ while (doneCompanies < targets.length && rl.canContinue() && currentPage <= maxP
     });
     return out;
   });
-  const toProcess = visible.filter((n) => targetSet.has(n) && !alreadyDone.has(n));
-  for (const name of toProcess) {
+  // 模糊匹配：页面名是目标名的前缀，或目标名以页面名开头
+  const matchTarget = (visName) => targets.find((t) => !alreadyDone.has(t) && (t === visName || t.startsWith(visName) || visName.startsWith(t.slice(0, 18))));
+  const toProcess = visible.map((v) => ({ vis: v, target: matchTarget(v) })).filter((x) => x.target);
+  if (toProcess.length === 0 && currentPage === 1) {
+    // 第一页无匹配，可能页面还没到结果——输出调试
+    console.log('  [调试] 当前页可见公司:', visible.slice(0, 5).join(' / '));
+  }
+  for (const { vis, target: name } of toProcess) {
     if (!rl.canContinue() || doneCompanies >= targets.length) break;
+    // 每家采集前检测风控
+    const risk = await detectRiskControl(page);
+    if (risk) {
+      console.warn(`\n⚠️ 检测到风控：${risk}。已停止采集保护账号，请冷却 1-2 小时后再继续。`);
+      rl.tripCircuit(risk);
+      break;
+    }
     await sleep(rl.nextDelayMs());
     try {
       const p = waitContact();
@@ -127,7 +140,7 @@ while (doneCompanies < targets.length && rl.canContinue() && currentPage <= maxP
           return t === nm && r.width > 0 && r.top > 0;
         });
         if (links[0]) { links[0].click(); return true; } return false;
-      }, name);
+      }, vis);
       if (!clicked) { continue; }
       await page.waitForTimeout(3500);
       await page.evaluate(() => {

@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseListData, parseContactPage } from './parser.js';
 import { escapeCsv } from './csv.js';
-import { RateLimiter } from './ratelimit.js';
+import { RateLimiter, detectRiskControl } from './ratelimit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -125,6 +125,9 @@ if (firstData && firstData.records) {
 let emptyRetries = 0;
 for (let p = 2; p <= OPT.pages; p++) {
   if (!rl.canContinue()) { console.warn('[熔断] 停止'); break; }
+  // 翻页前检测风控
+  const risk = await detectRiskControl(page);
+  if (risk) { console.warn(`\n⚠️ 检测到风控：${risk}，已停止保护账号。请冷却后再继续。`); rl.tripCircuit(risk); break; }
   await sleep(rl.nextDelayMs());
   let data = null;
   // 翻页最多重试 2 次
