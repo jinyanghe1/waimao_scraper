@@ -5,10 +5,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "probe": "node scripts/probe.js",
-    "login": "node scripts/login.js",
-    "scrape": "node src/index.js",
-    "test": "node --test tests/"
+    "login": "node src/login.js",
+    "scrape": "node src/scrape.js",
+    "test": "node --test \"tests/*.test.js\""
   },
   "dependencies": {
     "playwright": "^1.49.0"

@@ -49,11 +49,17 @@ console.log('4. 如果窗口没有自动弹出，请检查任务栏/Dock');
 console.log('');
 
 // 启动持久化浏览器登录
+// UA 按平台动态生成，避免 Windows 机器顶着 macOS UA 触发风控/兼容异常
+const isWin = process.platform === 'win32';
+const uaOS = isWin
+  ? 'Windows NT 10.0; Win64; x64'
+  : (process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7' : 'X11; Linux x86_64');
+const UA = `Mozilla/5.0 (${uaOS}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36`;
 const ctx = await chromium.launchPersistentContext(PROFILE_DIR, {
   headless: false,
   viewport: null,
   args: ['--disable-blink-features=AutomationControlled', '--start-maximized'],
-  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36',
+  userAgent: UA,
 });
 const page = ctx.pages()[0] || (await ctx.newPage());
 await page.goto(BASE, { waitUntil: 'domcontentloaded' }).catch(() => {});

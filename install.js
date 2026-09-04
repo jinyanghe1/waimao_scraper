@@ -60,22 +60,27 @@ if (!browserOk) {
 
 // 4. 浏览器登录引导
 console.log('\n→ 检测外贸通登录态…');
-// 先检查 9222 是否有已登录的 Chrome
+// 先检查 9222 是否有已登录的 Chrome/Edge
 const cdpCheck = run(isWin
   ? 'curl -s --noproxy * http://127.0.0.1:9222/json/version'
   : "curl -s --noproxy '*' http://127.0.0.1:9222/json/version");
-if (!cdpCheck.ok || !cdpCheck.out.includes('Chrome')) {
-  console.log('  未检测到调试模式的 Chrome，正在启动登录引导…');
-  const loginScript = isWin ? 'scripts\\start_chrome.bat' : 'bash scripts/start_chrome.sh';
-  run(loginScript);
-  console.log('  已在 Chrome 打开外贸通登录页');
+if (!cdpCheck.ok || !/Chrome|Edge|Chromium/i.test(cdpCheck.out)) {
+  console.log('  未检测到调试模式的浏览器，正在启动登录引导…');
+  // 用绝对路径调脚本，避免 Windows 下相对路径反斜杠被 shell 吞掉
+  const loginCmd = isWin
+    ? `"${path.join(SKILL_DIR, 'scripts', 'start_chrome.bat')}"`
+    : `bash "${path.join(SKILL_DIR, 'scripts', 'start_chrome.sh')}"`;
+  run(loginCmd);
+  console.log('  已在浏览器打开外贸通登录页');
 }
 
 console.log('\n=== 安装完成 ===');
 console.log('\n下一步：在弹出的 Chrome 窗口登录网易外贸通，然后回到 WorkBuddy 说「开始采集」即可。');
 
-// 输出安装报告（供 agent 读取生成 README）
-fs.writeFileSync(path.join(SKILL_DIR, 'data', 'install_report.json'), JSON.stringify({
+// 输出安装报告（供 agent 读取生成 README）。data/ 被 .gitignore 忽略，新环境可能不存在，先建目录
+const dataDir = path.join(SKILL_DIR, 'data');
+fs.mkdirSync(dataDir, { recursive: true });
+fs.writeFileSync(path.join(dataDir, 'install_report.json'), JSON.stringify({
   platform: process.platform, node: nodeV.out.trim(), installedAt: new Date().toISOString(), ok: true,
 }, null, 2));
 process.exit(0);
