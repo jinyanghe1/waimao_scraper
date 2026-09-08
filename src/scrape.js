@@ -5,9 +5,10 @@ import { chromium } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseListData, parseContactPage } from './parser.js';
+import { parseListData, parseContactPage, dedupeLeads } from './parser.js';
 import { escapeCsv } from './csv.js';
 import { RateLimiter, detectRiskControl } from './ratelimit.js';
+import { checkSessionHealth, withRetry, cooldownAdvice } from './stability.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -50,10 +51,12 @@ const page = ctx.pages().find((p) => p.url().includes('waimao.office.163.com'));
 if (!page) { console.error('❌ 未找到外贸通标签页'); process.exit(1); }
 await page.bringToFront().catch(() => {});
 
-// 登录态检查
-const bodyTxt = await page.evaluate(() => document.body?.innerText || '').catch(() => '');
-if (/\/login/.test(page.url()) || /密码登录|扫码登录|立即登录/.test(bodyTxt.slice(0, 400))) {
-  console.error('❌ 登录态失效，请先运行: node src/login.js'); process.exit(1);
+// 登录态 + 风控健康检查（P2）
+const health = await checkSessionHealth(page);
+if (!health.ok) {
+  console.error(`❌ ${health.action}`);
+  if (health.reason === 'rate_limited' && rl.trippedAt) console.error(`   ${cooldownAdvice('触发限流')}`);
+  process.exit(1);
 }
 console.log('[登录态] OK');
 
@@ -155,11 +158,18 @@ for (let p = 2; p <= OPT.pages; p++) {
   console.log(`[第${p}页] +${rows.length} 累计 ${allLeads.length}`);
 }
 
+// 去重（P1）：按域名保留最高交易额
+const before = allLeads.length;
+allLeads = dedupeLeads(allLeads);
+if (allLeads.length < before) console.log(`[去重] ${before} → ${allLeads.length} 条`);
 console.log(`\n[列表完成] 共 ${allLeads.length} 条公司线索 → ${path.basename(LEADS_CSV)}`);
 
 // === 步骤3: 联系人采集（可选）===
 if (OPT.withContacts && allLeads.length) {
   console.log(`\n→ 开始联系人采集（最多 ${OPT.maxCompaniesContact} 家，每家 top ${OPT.topX}）`);
+  // 采集前健康检查
+  const health2 = await checkSessionHealth(page);
+  if (!health2.ok) { console.error(`❌ ${health2.action}`); process.exit(1); }
   // 回到第1页
   await cleanup(); await page.waitForTimeout(800);
   await page.evaluate(() => { const p1 = document.querySelector('.ant-pagination-item-1, [title="1"]'); if (p1) p1.click(); });

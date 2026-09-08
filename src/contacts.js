@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { parseContactPage } from './parser.js';
 import { escapeCsv } from './csv.js';
 import { RateLimiter, detectRiskControl } from './ratelimit.js';
+import { checkSessionHealth, cooldownAdvice } from './stability.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -28,6 +29,10 @@ const ctx = browser.contexts()[0];
 const page = ctx.pages().find((p) => p.url().includes('waimao.office.163.com'));
 if (!page) { console.error('❌ 未找到外贸通标签页'); process.exit(1); }
 await page.bringToFront().catch(() => {});
+// 登录态 + 风控健康检查（P2）
+const health = await checkSessionHealth(page);
+if (!health.ok) { console.error(`❌ ${health.action}`); process.exit(1); }
+console.log('[登录态] OK');
 
 // 拦截 getContactPage
 let pending = null;

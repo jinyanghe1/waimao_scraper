@@ -36,7 +36,7 @@ export class RateLimiter {
   }
 
   // 触发风控（滑块/429/限流提示）→ 立即熔断
-  tripCircuit(reason = '') { this.tripped = true; this.tripReason = reason; }
+  tripCircuit(reason = '') { this.tripped = true; this.tripReason = reason; this.trippedAt = Date.now(); }
 }
 
 // 风控检测：页面是否出现限流/验证码/滑块
