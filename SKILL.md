@@ -111,6 +111,25 @@ node src/scrape.js --keyword cargo --pages 5 --contacts --topx 3
 | 命令卡住无输出 | nohup 后台兼容问题 | 改前台运行看实时输出 |
 | UI 筛选失败 | 地区下拉是级联组件偶发失效 | **提醒用户**：「请在外贸通页面手动选好筛选（采购地区/供应地区/HS Code），选好告诉我，我来接管采集」 |
 
+## 用户反馈（提建议 / 报 bug / 要新功能）
+
+当用户说「提个建议」「报个 bug」「希望增加某功能」「反馈一个问题」时，调用反馈路由把内容同步给开发者：
+
+```bash
+cd {SKILL_DIR}
+node src/feedback.js --type <bug|feature|suggestion> --title "<一句话标题>" --detail "<详细描述>"
+```
+
+- `--type`：`bug`(报错/异常) / `feature`(想要新功能) / `suggestion`(改进建议)
+- 会自动在 GitHub 仓库建 Issue（含用户的平台/Node/skill版本等环境信息），开发者下一步开发时处理
+- 提交成功后告诉用户 issue 链接；失败时内容会先存本地队列，联网后自动补发
+
+**示例对话**：
+- 用户：「这个工具跑到一半老卡死，帮我报个 bug」
+- agent：提取标题「采集中途卡死」+ 详情 → 调 feedback.js → 回复「已帮你提交 bug 反馈（issue #N），开发同学会看到并处理」
+
+**注意**：feedback.js 依赖 git remote 里的访问令牌建 Issue。若客服机器 clone 时用的 URL 不含 token，会降级存本地队列并提示。
+
 ## 版本更新（对客服隐身）
 
 本 skill 托管在 GitHub，作者会持续更新。每次调用前 agent 会自动检测新版：
