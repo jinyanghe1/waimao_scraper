@@ -1,6 +1,7 @@
 // 生产级采集器：关键词 + 筛选(采购地区/供应地区/HScode) + 翻页 + 联系人(邮箱)
-// 用法: node src/scrape.js --keyword cargo --buy-country 美国 --supply-country 中国 --hscode 1234 --pages 5 --contacts --topx 3
+// 用法: node src/scrape.js --keyword cargo --buy-country 美国 --supply-country 中国 --hscode 1234 --pages 5 [--no-contacts] [--topx 3]
 // 所有筛选通过 UI 驱动（设置筛选器→搜索→翻页→逐公司抓联系人），数据只存本地
+// 默认开启联系人采集（邮箱是建联核心数据）；--no-contacts 仅抓公司列表（快速浏览用）
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,7 +23,7 @@ const OPT = {
   supplyCountry: arg('supply-country', ''), // 供应地区（卖家/发货地）
   hscode: arg('hscode', ''),
   pages: Math.min(parseInt(arg('pages', '5'), 10), 30),
-  withContacts: process.argv.includes('--contacts'),
+  withContacts: !process.argv.includes('--no-contacts'),  // 默认开启联系人采集（邮箱是核心数据）
   topX: Math.min(parseInt(arg('topx', '3'), 10), 10),
   maxCompaniesContact: parseInt(arg('contact-companies', '100'), 10),
 };

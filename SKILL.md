@@ -40,14 +40,17 @@ node src/login.js --check   # 退出码 0=已登录, 1=需登录
 ```bash
 cd {SKILL_DIR}
 
-# 1) 公司线索采集：关键词 + 页数 + 可选筛选
+# 1) 公司线索+联系人采集（默认含邮箱）：关键词 + 页数 + 可选筛选
 node src/scrape.js --keyword cargo --pages 5
 
 # 2) 带筛选：采购地区(收货地)=美国, 供应地区(发货地)=中国, HSCode
 node src/scrape.js --keyword cargo --pages 5 --buy-country 美国 --supply-country 中国 --hscode 8471
 
-# 3) 同时采集联系人（姓名/职位/邮箱/LinkedIn），每公司取前3个
-node src/scrape.js --keyword cargo --pages 5 --contacts --topx 3
+# 3) 仅抓公司列表（不抓联系人，快速浏览用）
+node src/scrape.js --keyword cargo --pages 5 --no-contacts
+
+# 4) 自定义每公司联系人数量
+node src/scrape.js --keyword cargo --pages 5 --topx 5
 ```
 
 参数说明：
@@ -58,7 +61,7 @@ node src/scrape.js --keyword cargo --pages 5 --contacts --topx 3
 | --buy-country | 采购地区（买家所在国/收货地） | 空=不限 |
 | --supply-country | 供应地区（卖家/发货地，如"中国"） | 空=不限 |
 | --hscode | HS 海关编码 | 空 |
-| --contacts | 是否采集联系人 | 关 |
+| --no-contacts | 仅抓公司列表，不抓联系人（快速浏览） | 关（默认抓联系人） |
 | --topx | 每公司最多取几个联系人 | 3 |
 
 输出：{SKILL_DIR}/data/leads_关键词_日期.csv（公司线索）+ contacts_关键词_日期.csv（联系人）
