@@ -201,10 +201,13 @@ describe('submitFeedback', () => {
     });
     const mockExec = () => 'https://u:tok@github.com/o/r.git\n';
     const queueFile = path.join(tmpDir, 'q.json');
+    // 显式禁用腾讯文档降级，验证旧路径
+    const configFile = path.join(tmpDir, 'cfg.json');
+    fs.writeFileSync(configFile, JSON.stringify({ tencentDocs: { enabled: false } }), 'utf-8');
 
     const res = await submitFeedback(
       { type: 'suggestion', title: '加个导出按钮', detail: '希望在列表页加导出', env: {} },
-      { fetch: mockFetch, exec: mockExec, queueFile }
+      { fetch: mockFetch, exec: mockExec, queueFile, configFile }
     );
 
     assert.equal(res.ok, false);
@@ -221,10 +224,12 @@ describe('submitFeedback', () => {
     const mockFetch = async () => { throw new Error('ENOTFOUND api.github.com'); };
     const mockExec = () => 'https://u:tok@github.com/o/r.git\n';
     const queueFile = path.join(tmpDir, 'q.json');
+    const configFile = path.join(tmpDir, 'cfg.json');
+    fs.writeFileSync(configFile, JSON.stringify({ tencentDocs: { enabled: false } }), 'utf-8');
 
     const res = await submitFeedback(
       { type: 'bug', title: 'x', detail: 'y', env: {} },
-      { fetch: mockFetch, exec: mockExec, queueFile }
+      { fetch: mockFetch, exec: mockExec, queueFile, configFile }
     );
 
     assert.equal(res.ok, false);
@@ -238,10 +243,12 @@ describe('submitFeedback', () => {
     const mockFetch = async () => { fetchCalled = true; return { ok: true, status: 201, json: async () => ({}) }; };
     const mockExec = () => { throw new Error('no remote'); };
     const queueFile = path.join(tmpDir, 'q.json');
+    const configFile = path.join(tmpDir, 'cfg.json');
+    fs.writeFileSync(configFile, JSON.stringify({ tencentDocs: { enabled: false } }), 'utf-8');
 
     const res = await submitFeedback(
       { type: 'bug', title: 'x', detail: 'y', env: {} },
-      { fetch: mockFetch, exec: mockExec, queueFile }
+      { fetch: mockFetch, exec: mockExec, queueFile, configFile }
     );
 
     assert.equal(res.ok, false);

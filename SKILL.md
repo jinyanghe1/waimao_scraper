@@ -128,7 +128,29 @@ node src/feedback.js --type <bug|feature|suggestion> --title "<一句话标题>"
 - 用户：「这个工具跑到一半老卡死，帮我报个 bug」
 - agent：提取标题「采集中途卡死」+ 详情 → 调 feedback.js → 回复「已帮你提交 bug 反馈（issue #N），开发同学会看到并处理」
 
-**注意**：feedback.js 依赖 git remote 里的访问令牌建 Issue。若客服机器 clone 时用的 URL 不含 token，会降级存本地队列并提示。
+**注意**：feedback.js 依赖 git remote 里的访问令牌建 Issue。若客服机器 clone 时用的 URL 不含 token，会自动降级到腾讯文档（见下）。
+
+### 降级通道：腾讯文档智能表格
+
+当 GitHub 不可用（无 token / 网络受限）时，feedback.js 会返回 `channel:'tencent-docs'` 及 `addRecordsArgs`。此时 **agent 用腾讯文档 connector 把记录追加到反馈表**：
+
+1. 先调 feedback.js 拿到记录参数（agent 内执行）：
+   ```js
+   const { submitFeedback, getEnvInfo } = await import('{SKILL_DIR}/src/feedback.js');
+   const r = await submitFeedback({ type, title, detail, env: getEnvInfo() });
+   // r.channel === 'tencent-docs' 时，用 r.addRecordsArgs
+   ```
+2. 用 tencent-docs connector 追加到反馈表：
+   ```
+   tdoc_call tencent-docs smartsheet.add_records '<addRecordsArgs 的 JSON>'
+   ```
+   - 反馈表（已设所有人可编辑）：file_id `WWJNwfJLdUem`，sheet_id `t00i2h`
+   - URL: https://docs.qq.com/smartsheet/DV1dKTndmSkxkVWVt
+3. 追加成功后告诉用户「已同步到反馈表，开发同学会定期查看处理」
+
+若腾讯文档也失败，feedback.js 最终落到本地队列 `data/feedback_queue.json`，联网后补发。
+
+**三级降级链**：GitHub Issue → 腾讯文档智能表格 → 本地队列。
 
 ## 版本更新（对客服隐身）
 

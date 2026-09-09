@@ -10,8 +10,77 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_DIR = path.resolve(__dirname, '..');
 const DEFAULT_QUEUE_FILE = path.join(SKILL_DIR, 'data', 'feedback_queue.json');
+const DEFAULT_CONFIG_FILE = path.join(SKILL_DIR, 'data', 'feedback_config.json');
 
 const VALID_TYPES = ['bug', 'feature', 'suggestion'];
+
+// 内置默认腾讯文档配置（用户级智能表格已建好）
+const DEFAULT_TENCENT_DOCS = {
+  enabled: true,
+  fileId: 'WWJNwfJLdUem',
+  sheetId: 't00i2h',
+  sheetName: '用户反馈',
+  url: 'https://docs.qq.com/smartsheet/DV1dKTndmSkxkVWVt',
+};
+
+// ---------- 配置加载 ----------
+// 读取 data/feedback_config.json；不存在/损坏时回落到内置默认值
+export function loadFeedbackConfig(opts = {}) {
+  const configFile = opts.configFile || DEFAULT_CONFIG_FILE;
+  const fallback = {
+    tencentDocs: { ...DEFAULT_TENCENT_DOCS },
+  };
+  try {
+    if (!fs.existsSync(configFile)) return fallback;
+    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
+    const userTd = (parsed && typeof parsed === 'object' && parsed.tencentDocs) || {};
+    return {
+      ...fallback,
+      ...parsed,
+      tencentDocs: { ...DEFAULT_TENCENT_DOCS, ...userTd },
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+// ---------- 腾讯文档记录构造 ----------
+// 标准记录字段：{类型,标题,详情,平台,Node版本,Skill版本,提交时间,状态}
+export function buildTencentDocsRecord({ type, title, detail, env = {} }) {
+  return {
+    '类型': type,
+    '标题': title ?? '',
+    '详情': detail ?? '',
+    '平台': env.platform ?? 'unknown',
+    'Node版本': env.node ?? 'unknown',
+    'Skill版本': env.skillVersion ?? 'unknown',
+    '提交时间': env.time ?? new Date().toISOString(),
+    '状态': '待处理',
+  };
+}
+
+// 单选字段（智能表格单选类型直接传字符串）
+const TD_SINGLE_SELECT_FIELDS = new Set(['类型', '状态']);
+
+// 构造 tencent-docs connector smartsheet.add_records 的调用参数
+// feedback.js 不直接调 API，仅返回参数，由调用方（agent）执行
+export function buildTencentDocsAddRecordsArgs(record, opts = {}) {
+  const fileId = opts.fileId || DEFAULT_TENCENT_DOCS.fileId;
+  const sheetId = opts.sheetId || DEFAULT_TENCENT_DOCS.sheetId;
+  const fieldValues = {};
+  for (const [k, v] of Object.entries(record || {})) {
+    if (TD_SINGLE_SELECT_FIELDS.has(k)) {
+      fieldValues[k] = String(v ?? '');
+    } else {
+      fieldValues[k] = [{ type: 'text', text: String(v ?? '') }];
+    }
+  }
+  return {
+    file_id: fileId,
+    sheet_id: sheetId,
+    records: [{ field_values: fieldValues }],
+  };
+}
 
 // ---------- 解析 remote URL ----------
 // 支持: https://user:TOKEN@github.com/owner/repo.git → { owner, repo, token }
@@ -101,11 +170,36 @@ export async function submitFeedback(input, opts = {}) {
   const payload = buildIssuePayload({ type, title, detail, env });
   const queueFile = opts.queueFile || DEFAULT_QUEUE_FILE;
 
+  // 加载反馈配置（含腾讯文档降级通道）
+  const config = loadFeedbackConfig(opts);
+  const tdCfg = (config && config.tencentDocs) || {};
+  const tdEnabled = !!tdCfg.enabled && !!tdCfg.fileId && !!tdCfg.sheetId;
+
+  // 构造降级返回：腾讯文档 enabled → 返回 addRecordsArgs 给 agent 调 connector；否则落本地队列
+  const fallback = (error) => {
+    if (tdEnabled) {
+      const record = buildTencentDocsRecord({ type, title, detail, env });
+      const addRecordsArgs = buildTencentDocsAddRecordsArgs(record, {
+        fileId: tdCfg.fileId,
+        sheetId: tdCfg.sheetId,
+      });
+      return {
+        ok: false,
+        channel: 'tencent-docs',
+        url: tdCfg.url || DEFAULT_TENCENT_DOCS.url,
+        record,
+        addRecordsArgs,
+        error,
+      };
+    }
+    appendLocalQueue({ type, title, detail, env }, { queueFile });
+    return { ok: false, url: null, error };
+  };
+
   // 解析 remote；无 token 直接降级，不发请求
   const remote = parseGitRemote(opts);
   if (!remote) {
-    appendLocalQueue({ type, title, detail, env }, { queueFile });
-    return { ok: false, url: null, error: 'no_remote_or_token（已写入本地队列）' };
+    return fallback('no_remote_or_token（已降级到 ' + (tdEnabled ? '腾讯文档智能表格' : '本地队列') + '）');
   }
 
   const fetchImpl = opts.fetch || globalThis.fetch;
@@ -130,15 +224,13 @@ export async function submitFeedback(input, opts = {}) {
         const data = await res.json();
         if (data && data.message) msg += `: ${data.message}`;
       } catch { /* 忽略 body 解析失败 */ }
-      appendLocalQueue({ type, title, detail, env }, { queueFile });
-      return { ok: false, url: null, error: msg };
+      return fallback(msg);
     }
 
     const data = await res.json();
     return { ok: true, url: data.html_url || null, error: null };
   } catch (e) {
-    appendLocalQueue({ type, title, detail, env }, { queueFile });
-    return { ok: false, url: null, error: String(e && e.message ? e.message : e) };
+    return fallback(String(e && e.message ? e.message : e));
   }
 }
 
