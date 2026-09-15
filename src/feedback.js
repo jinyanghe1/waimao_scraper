@@ -205,33 +205,43 @@ export async function submitFeedback(input, opts = {}) {
   const fetchImpl = opts.fetch || globalThis.fetch;
   const apiUrl = `https://api.github.com/repos/${remote.owner}/${remote.repo}/issues`;
 
-  try {
-    const res = await fetchImpl(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${remote.token}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'waimao-scraper-feedback',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-      body: JSON.stringify(payload),
-    });
+  // 先尝试带 labels 创建；若因 labels 权限失败(403)，去掉 labels 重试
+  for (const attempt of [payload, { ...payload, labels: undefined }]) {
+    try {
+      const res = await fetchImpl(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${remote.token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+          'User-Agent': 'waimao-scraper-feedback',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+        body: JSON.stringify(attempt),
+      });
 
-    if (!res.ok) {
+      if (res.ok) {
+        const data = await res.json();
+        return { ok: true, url: data.html_url || null, error: null };
+      }
+
+      // 403 且当前请求带 labels → 下一次循环去掉 labels 重试
+      if (res.status === 403 && attempt.labels) {
+        continue;
+      }
+
       let msg = `HTTP ${res.status}`;
       try {
         const data = await res.json();
         if (data && data.message) msg += `: ${data.message}`;
       } catch { /* 忽略 body 解析失败 */ }
       return fallback(msg);
+    } catch (e) {
+      return fallback(String(e && e.message ? e.message : e));
     }
-
-    const data = await res.json();
-    return { ok: true, url: data.html_url || null, error: null };
-  } catch (e) {
-    return fallback(String(e && e.message ? e.message : e));
   }
+
+  return fallback('unexpected: both attempts failed');
 }
 
 // ---------- CLI ----------
